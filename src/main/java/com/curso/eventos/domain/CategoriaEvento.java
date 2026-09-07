@@ -13,9 +13,9 @@ import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
 @Entity
 @Table(name = "categoria_evento")
-
 public class CategoriaEvento {
 
     @Id
@@ -36,8 +36,10 @@ public class CategoriaEvento {
         this.nome = validarTextoObrigatorio(nome, "Nome da categoria é obrigatório");
         this.status = Status.ATIVO;
     }
+
     protected CategoriaEvento() {
     }
+
     public void adicionarEvento(Evento evento) {
         Objects.requireNonNull(evento, "Evento é obrigatório");
 
@@ -62,6 +64,10 @@ public class CategoriaEvento {
 
     public void inativar() {
         this.status = Status.INATIVO;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public String getNome() {
