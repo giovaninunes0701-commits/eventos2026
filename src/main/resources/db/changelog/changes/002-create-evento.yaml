@@ -1,0 +1,122 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-01-create-evento
+      author: giovani-eventos2026
+      changes:
+        - createTable:
+            tableName: evento
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_evento
+                    nullable: false
+              - column:
+                  name: codigo
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: nome
+                  type: VARCHAR(150)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ingressos_disponiveis
+                  type: NUMERIC(18,3)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: valor_ingresso
+                  type: NUMERIC(18,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: data_evento
+                  type: DATE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: categoria_evento_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropTable:
+            tableName: evento
+
+  - changeSet:
+      id: 002-02-unique-codigo-evento
+      author: giovani-eventos2026
+      changes:
+        - addUniqueConstraint:
+            tableName: evento
+            columnNames: codigo
+            constraintName: uk_evento_codigo
+      rollback:
+        - dropUniqueConstraint:
+            tableName: evento
+            constraintName: uk_evento_codigo
+
+  - changeSet:
+      id: 002-03-foreign-key-categoria-evento
+      author: giovani-eventos2026
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: evento
+            baseColumnNames: categoria_evento_id
+            referencedTableName: categoria_evento
+            referencedColumnNames: id
+            constraintName: fk_evento_categoria_evento
+            onDelete: RESTRICT
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: evento
+            constraintName: fk_evento_categoria_evento
+
+  - changeSet:
+      id: 002-04-check-ingressos-disponiveis
+      author: giovani-eventos2026
+      changes:
+        - sql:
+            sql: >
+              ALTER TABLE evento
+              ADD CONSTRAINT ck_evento_ingressos_disponiveis
+              CHECK (ingressos_disponiveis >= 0)
+      rollback:
+        - sql:
+            sql: ALTER TABLE evento DROP CONSTRAINT ck_evento_ingressos_disponiveis
+
+  - changeSet:
+      id: 002-05-check-valor-ingresso
+      author: giovani-eventos2026
+      changes:
+        - sql:
+            sql: >
+              ALTER TABLE evento
+              ADD CONSTRAINT ck_evento_valor_ingresso
+              CHECK (valor_ingresso >= 0)
+      rollback:
+        - sql:
+            sql: ALTER TABLE evento DROP CONSTRAINT ck_evento_valor_ingresso
+
+  - changeSet:
+      id: 002-06-check-status-evento
+      author: giovani-eventos2026
+      changes:
+        - sql:
+            sql: >
+              ALTER TABLE evento
+              ADD CONSTRAINT ck_evento_status
+              CHECK (status IN ('ATIVO', 'INATIVO'))
+      rollback:
+        - sql:
+            sql: ALTER TABLE evento DROP CONSTRAINT ck_evento_status

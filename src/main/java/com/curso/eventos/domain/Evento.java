@@ -1,18 +1,59 @@
 package com.curso.eventos.domain;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Objects;
 
+@Entity
+@Table(
+        name = "evento",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_evento_codigo",
+                columnNames = "codigo"))
 public class Evento {
 
-    private final String codigo;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 50)
+    private String codigo;
+
+    @Column(nullable = false, length = 150)
     private String nome;
+
+    @Column(name = "ingressos_disponiveis", nullable = false, precision = 18, scale = 3)
     private BigDecimal ingressosDisponiveis;
+
+    @Column(name = "valor_ingresso", nullable = false, precision = 18, scale = 2)
     private BigDecimal valorIngresso;
-    private final LocalDate dataEvento;
+
+    @Column(name = "data_evento", nullable = false)
+    private LocalDate dataEvento;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private Status status;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(
+            name = "categoria_evento_id",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_evento_categoria_evento"))
     private CategoriaEvento categoria;
 
     public Evento(
@@ -37,6 +78,9 @@ public class Evento {
                 dataEvento,
                 "Data do evento é obrigatória");
         this.status = Status.ATIVO;
+    }
+
+    protected Evento() {
     }
 
     public BigDecimal calcularValorArrecadacaoPotencial() {
@@ -88,6 +132,10 @@ public class Evento {
         }
 
         this.categoria = categoria;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public String getCodigo() {

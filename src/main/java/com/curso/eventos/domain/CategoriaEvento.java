@@ -1,20 +1,43 @@
 package com.curso.eventos.domain;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+@Entity
+@Table(name = "categoria_evento")
 
 public class CategoriaEvento {
 
-    private final String nome;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 120)
+    private String nome;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private Status status;
-    private final List<Evento> eventos = new ArrayList<>();
+
+    @OneToMany(mappedBy = "categoria", fetch = FetchType.LAZY)
+    private List<Evento> eventos = new ArrayList<>();
 
     public CategoriaEvento(String nome) {
         this.nome = validarTextoObrigatorio(nome, "Nome da categoria é obrigatório");
         this.status = Status.ATIVO;
     }
-
+    protected CategoriaEvento() {
+    }
     public void adicionarEvento(Evento evento) {
         Objects.requireNonNull(evento, "Evento é obrigatório");
 
