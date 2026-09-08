@@ -41,7 +41,8 @@ class EventoServiceTest {
 
         Evento cadastrado = eventoService.cadastrar(
                 novoEvento("SRV-001"),
-                categoria.getId());
+                categoria.getId(),
+                null);
 
         assertNotNull(cadastrado.getId());
         assertEquals(categoria.getId(), cadastrado.getCategoria().getId());
@@ -53,7 +54,7 @@ class EventoServiceTest {
 
         assertThrows(
                 RecursoNaoEncontradoException.class,
-                () -> eventoService.cadastrar(evento, Long.MAX_VALUE));
+                () -> eventoService.cadastrar(evento, Long.MAX_VALUE, null));
 
         assertFalse(eventoRepository.existsByCodigo("SRV-002"));
     }
