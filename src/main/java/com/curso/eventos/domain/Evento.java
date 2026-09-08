@@ -56,11 +56,30 @@ public class Evento {
             foreignKey = @ForeignKey(name = "fk_evento_categoria_evento"))
     private CategoriaEvento categoria;
 
+    @Column(name = "ingressos_minimos_alerta", nullable = false, precision = 18, scale = 3)
+    private BigDecimal ingressosMinimosAlerta;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "organizador_id",
+            foreignKey = @ForeignKey(name = "fk_evento_organizador"))
+    private Organizador organizador;
+
     public Evento(
             String codigo,
             String nome,
             BigDecimal ingressosDisponiveis,
             BigDecimal valorIngresso,
+            LocalDate dataEvento) {
+        this(codigo, nome, ingressosDisponiveis, valorIngresso, BigDecimal.ZERO, dataEvento);
+    }
+
+    public Evento(
+            String codigo,
+            String nome,
+            BigDecimal ingressosDisponiveis,
+            BigDecimal valorIngresso,
+            BigDecimal ingressosMinimosAlerta,
             LocalDate dataEvento) {
         this.codigo = validarTextoObrigatorio(
                 codigo,
@@ -74,6 +93,9 @@ public class Evento {
         this.valorIngresso = validarNaoNegativo(
                 valorIngresso,
                 "Valor do ingresso não pode ser negativo");
+        this.ingressosMinimosAlerta = validarNaoNegativo(
+                ingressosMinimosAlerta,
+                "Ingressos mínimos de alerta não pode ser negativo");
         this.dataEvento = Objects.requireNonNull(
                 dataEvento,
                 "Data do evento é obrigatória");
@@ -124,6 +146,10 @@ public class Evento {
         this.status = Status.INATIVO;
     }
 
+    public void associarOrganizador(Organizador organizador) {
+        this.organizador = organizador;
+    }
+
     void associarA(CategoriaEvento categoria) {
         Objects.requireNonNull(categoria, "Categoria é obrigatória");
 
@@ -164,6 +190,14 @@ public class Evento {
 
     public CategoriaEvento getCategoria() {
         return categoria;
+    }
+
+    public BigDecimal getIngressosMinimosAlerta() {
+        return ingressosMinimosAlerta;
+    }
+
+    public Organizador getOrganizador() {
+        return organizador;
     }
 
     private static String validarTextoObrigatorio(String texto, String mensagem) {

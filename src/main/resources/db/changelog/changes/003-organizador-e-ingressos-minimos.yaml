@@ -1,0 +1,152 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-01-create-organizador
+      author: giovani-eventos2026
+      changes:
+        - createTable:
+            tableName: organizador
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_organizador
+                    nullable: false
+              - column:
+                  name: razao_social
+                  type: VARCHAR(150)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: cnpj
+                  type: VARCHAR(14)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropTable:
+            tableName: organizador
+
+  - changeSet:
+      id: 003-02-unique-cnpj-organizador
+      author: giovani-eventos2026
+      changes:
+        - addUniqueConstraint:
+            tableName: organizador
+            columnNames: cnpj
+            constraintName: uk_organizador_cnpj
+      rollback:
+        - dropUniqueConstraint:
+            tableName: organizador
+            constraintName: uk_organizador_cnpj
+
+  - changeSet:
+      id: 003-03-check-status-organizador
+      author: giovani-eventos2026
+      changes:
+        - sql:
+            sql: >
+              ALTER TABLE organizador
+              ADD CONSTRAINT ck_organizador_status
+              CHECK (status IN ('ATIVO', 'INATIVO'))
+      rollback:
+        - sql:
+            sql: ALTER TABLE organizador DROP CONSTRAINT ck_organizador_status
+
+  - changeSet:
+      id: 003-04-add-ingressos-minimos-alerta-evento
+      author: giovani-eventos2026
+      comment: Expande a tabela evento com a nova coluna, ainda opcional.
+      changes:
+        - addColumn:
+            tableName: evento
+            columns:
+              - column:
+                  name: ingressos_minimos_alerta
+                  type: NUMERIC(18,3)
+      rollback:
+        - dropColumn:
+            tableName: evento
+            columnName: ingressos_minimos_alerta
+
+  - changeSet:
+      id: 003-05-fill-ingressos-minimos-alerta-evento
+      author: giovani-eventos2026
+      comment: Preenche linhas existentes antes de tornar a coluna obrigatória.
+      changes:
+        - update:
+            tableName: evento
+            columns:
+              - column:
+                  name: ingressos_minimos_alerta
+                  valueNumeric: 0
+            where: ingressos_minimos_alerta IS NULL
+      rollback:
+        - sql:
+            sql: SELECT 1
+
+  - changeSet:
+      id: 003-06-not-null-ingressos-minimos-alerta-evento
+      author: giovani-eventos2026
+      comment: Restringe a coluna após o backfill (contract).
+      changes:
+        - addNotNullConstraint:
+            tableName: evento
+            columnName: ingressos_minimos_alerta
+            columnDataType: NUMERIC(18,3)
+      rollback:
+        - dropNotNullConstraint:
+            tableName: evento
+            columnName: ingressos_minimos_alerta
+            columnDataType: NUMERIC(18,3)
+
+  - changeSet:
+      id: 003-07-check-ingressos-minimos-alerta-evento
+      author: giovani-eventos2026
+      changes:
+        - sql:
+            sql: >
+              ALTER TABLE evento
+              ADD CONSTRAINT ck_evento_ingressos_minimos_alerta
+              CHECK (ingressos_minimos_alerta >= 0)
+      rollback:
+        - sql:
+            sql: ALTER TABLE evento DROP CONSTRAINT ck_evento_ingressos_minimos_alerta
+
+  - changeSet:
+      id: 003-08-add-organizador-id-evento
+      author: giovani-eventos2026
+      comment: Organizador é opcional para preservar eventos já cadastrados.
+      changes:
+        - addColumn:
+            tableName: evento
+            columns:
+              - column:
+                  name: organizador_id
+                  type: BIGINT
+      rollback:
+        - dropColumn:
+            tableName: evento
+            columnName: organizador_id
+
+  - changeSet:
+      id: 003-09-foreign-key-organizador
+      author: giovani-eventos2026
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: evento
+            baseColumnNames: organizador_id
+            referencedTableName: organizador
+            referencedColumnNames: id
+            constraintName: fk_evento_organizador
+            onDelete: SET NULL
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: evento
+            constraintName: fk_evento_organizador
