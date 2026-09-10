@@ -7,6 +7,7 @@ import com.curso.eventos.application.EventoService;
 import com.curso.eventos.domain.Evento;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -37,11 +38,13 @@ public class EventoController {
         return ResponseEntity.created(location).body(mapper.toResponse(cadastrado));
     }
 
+    @Transactional(readOnly = true)
     @GetMapping("/{id}")
     public EventoResponse buscarPorId(@PathVariable Long id) {
         return mapper.toResponse(service.buscarPorId(id));
     }
 
+    @Transactional(readOnly = true)
     @GetMapping
     public List<EventoResponse> listar() {
         return service.listar().stream().map(mapper::toResponse).toList();
