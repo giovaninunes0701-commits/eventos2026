@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-01-vagas-disponiveis
+      author: giovani-aula08
+      changes:
+        - addColumn:
+            tableName: evento
+            columns:
+              - column:
+                  name: vagas_disponiveis
+                  type: int
+        - sql:
+            sql: UPDATE evento SET vagas_disponiveis = capacidade
+        - addNotNullConstraint:
+            tableName: evento
+            columnName: vagas_disponiveis
+            columnDataType: int
+      rollback:
+        - dropColumn:
+            tableName: evento
+            columnName: vagas_disponiveis

@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-01-local
+      author: curso-eventos-2026
+      changes:
+        - createTable:
+            tableName: local_evento
+            columns:
+              - column: {name: id, type: BIGINT, autoIncrement: true, constraints: {primaryKey: true, primaryKeyName: pk_local_evento, nullable: false}}
+              - column: {name: nome, type: VARCHAR(120), constraints: {nullable: false}}
+              - column: {name: endereco, type: VARCHAR(200), constraints: {nullable: false}}
+        - addUniqueConstraint: {tableName: local_evento, columnNames: nome, constraintName: uk_local_nome}
+      rollback:
+        - dropTable: {tableName: local_evento}
+  - changeSet:
+      id: 001-02-evento
+      author: curso-eventos-2026
+      changes:
+        - createTable:
+            tableName: evento
+            columns:
+              - column: {name: id, type: BIGINT, autoIncrement: true, constraints: {primaryKey: true, primaryKeyName: pk_evento, nullable: false}}
+              - column: {name: codigo, type: VARCHAR(40), constraints: {nullable: false}}
+              - column: {name: titulo, type: VARCHAR(150), constraints: {nullable: false}}
+              - column: {name: data_evento, type: DATE, constraints: {nullable: false}}
+              - column: {name: capacidade, type: INTEGER, constraints: {nullable: false}}
+              - column: {name: status, type: VARCHAR(20), constraints: {nullable: false}}
+              - column: {name: local_id, type: BIGINT, constraints: {nullable: false}}
+        - addUniqueConstraint: {tableName: evento, columnNames: codigo, constraintName: uk_evento_codigo}
+        - addForeignKeyConstraint: {baseTableName: evento, baseColumnNames: local_id, referencedTableName: local_evento, referencedColumnNames: id, constraintName: fk_evento_local, onDelete: RESTRICT}
+        - sql:
+            sql: ALTER TABLE evento ADD CONSTRAINT ck_evento_capacidade CHECK (capacidade >= 0)
+      rollback:
+        - dropTable: {tableName: evento}

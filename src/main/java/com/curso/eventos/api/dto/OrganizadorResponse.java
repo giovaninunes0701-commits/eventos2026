@@ -1,11 +1,2 @@
 package com.curso.eventos.api.dto;
-
-import com.curso.eventos.domain.Status;
-
-public record OrganizadorResponse(
-        Long id,
-        String razaoSocial,
-        String cnpj,
-        Status status
-) {
-}
+public record OrganizadorResponse(Long id, String nome, String email) {}

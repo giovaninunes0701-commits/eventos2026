@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-01-linha-legada
+      author: curso-eventos-2026
+      comment: Demonstra preservação de evento anterior à evolução da Aula 06.
+      changes:
+        - insert:
+            tableName: local_evento
+            columns:
+              - column: {name: nome, value: "Auditório de exemplo"}
+              - column: {name: endereco, value: "Rua Acadêmica, 100"}
+        - sql:
+            sql: "INSERT INTO evento (codigo,titulo,data_evento,capacidade,status,local_id) SELECT 'LEGADO-001','Evento anterior','2026-09-01',100,'ATIVO',id FROM local_evento WHERE nome='Auditório de exemplo'"
+      rollback:
+        - sql: {sql: "DELETE FROM evento WHERE codigo='LEGADO-001'"}
+        - sql: {sql: "DELETE FROM local_evento WHERE nome='Auditório de exemplo'"}

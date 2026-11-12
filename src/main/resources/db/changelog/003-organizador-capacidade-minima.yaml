@@ -1,0 +1,80 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-01-criar-organizador
+      author: curso-eventos-2026
+      changes:
+        - createTable:
+            tableName: organizador
+            columns:
+              - column: {name: id, type: BIGINT, autoIncrement: true, constraints: {primaryKey: true, primaryKeyName: pk_organizador, nullable: false}}
+              - column: {name: nome, type: VARCHAR(120), constraints: {nullable: false}}
+              - column: {name: email, type: VARCHAR(150), constraints: {nullable: false}}
+      rollback:
+        - dropTable: {tableName: organizador}
+  - changeSet:
+      id: 003-02-unique-email
+      author: curso-eventos-2026
+      changes:
+        - addUniqueConstraint: {tableName: organizador, columnNames: email, constraintName: uk_organizador_email}
+      rollback:
+        - dropUniqueConstraint: {tableName: organizador, constraintName: uk_organizador_email}
+  - changeSet:
+      id: 003-03-add-capacidade-minima
+      author: curso-eventos-2026
+      changes:
+        - addColumn:
+            tableName: evento
+            columns:
+              - column: {name: capacidade_minima, type: INTEGER}
+      rollback:
+        - dropColumn: {tableName: evento, columnName: capacidade_minima}
+  - changeSet:
+      id: 003-04-backfill-capacidade-minima
+      author: curso-eventos-2026
+      comment: Eventos existentes recebem mínimo zero sem perder linhas.
+      changes:
+        - update:
+            tableName: evento
+            columns:
+              - column: {name: capacidade_minima, valueNumeric: 0}
+            where: capacidade_minima IS NULL
+      rollback:
+        - empty: {}
+  - changeSet:
+      id: 003-05-not-null-capacidade-minima
+      author: curso-eventos-2026
+      changes:
+        - addNotNullConstraint: {tableName: evento, columnName: capacidade_minima, columnDataType: INTEGER}
+      rollback:
+        - dropNotNullConstraint: {tableName: evento, columnName: capacidade_minima, columnDataType: INTEGER}
+  - changeSet:
+      id: 003-06-check-capacidade-minima
+      author: curso-eventos-2026
+      changes:
+        - sql: {sql: "ALTER TABLE evento ADD CONSTRAINT ck_evento_capacidade_minima CHECK (capacidade_minima >= 0 AND capacidade_minima <= capacidade)"}
+      rollback:
+        - sql: {sql: "ALTER TABLE evento DROP CONSTRAINT ck_evento_capacidade_minima"}
+  - changeSet:
+      id: 003-07-add-organizador-opcional
+      author: curso-eventos-2026
+      changes:
+        - addColumn:
+            tableName: evento
+            columns:
+              - column: {name: organizador_id, type: BIGINT}
+      rollback:
+        - dropColumn: {tableName: evento, columnName: organizador_id}
+  - changeSet:
+      id: 003-08-fk-organizador
+      author: curso-eventos-2026
+      changes:
+        - addForeignKeyConstraint: {baseTableName: evento, baseColumnNames: organizador_id, referencedTableName: organizador, referencedColumnNames: id, constraintName: fk_evento_organizador, onDelete: RESTRICT}
+      rollback:
+        - dropForeignKeyConstraint: {baseTableName: evento, constraintName: fk_evento_organizador}
+  - changeSet:
+      id: 003-09-check-status
+      author: curso-eventos-2026
+      changes:
+        - sql: {sql: "ALTER TABLE evento ADD CONSTRAINT ck_evento_status CHECK (status IN ('ATIVO','INATIVO'))"}
+      rollback:
+        - sql: {sql: "ALTER TABLE evento DROP CONSTRAINT ck_evento_status"}

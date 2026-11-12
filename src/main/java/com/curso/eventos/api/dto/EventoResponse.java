@@ -1,23 +1,6 @@
 package com.curso.eventos.api.dto;
-
 import com.curso.eventos.domain.Status;
-
-import java.math.BigDecimal;
 import java.time.LocalDate;
-
-public record EventoResponse(
-        Long id,
-        String codigo,
-        String nome,
-        BigDecimal ingressosDisponiveis,
-        BigDecimal valorIngresso,
-        BigDecimal ingressosMinimosAlerta,
-        BigDecimal valorArrecadacaoPotencial,
-        LocalDate dataEvento,
-        Status status,
-        Long categoriaId,
-        String categoriaNome,
-        Long organizadorId,
-        String organizadorRazaoSocial
-) {
-}
+public record EventoResponse(Long id, String codigo, String titulo, LocalDate dataEvento,
+    Integer capacidade, Integer capacidadeMinima, Integer vagasDisponiveis, Status status,
+    Long localId, String localNome, Long organizadorId, String organizadorNome) {}

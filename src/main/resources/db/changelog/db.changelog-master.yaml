@@ -1,7 +1,9 @@
 databaseChangeLog:
   - include:
-      file: db/changelog/changes/001-create-categoria-evento.yaml
+      file: db/changelog/001-estrutura-inicial.yaml
   - include:
-      file: db/changelog/changes/002-create-evento.yaml
+      file: db/changelog/002-dados-anteriores.yaml
   - include:
-      file: db/changelog/changes/003-organizador-e-ingressos-minimos.yaml
+      file: db/changelog/003-organizador-capacidade-minima.yaml
+  - include:
+      file: db/changelog/004-vagas-disponiveis.yaml
