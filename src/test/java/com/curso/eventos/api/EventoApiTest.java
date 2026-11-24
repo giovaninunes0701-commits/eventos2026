@@ -23,7 +23,7 @@ class EventoApiTest {
 
     @Test void migracoesRegistradasEBancoCoerente() {
         Integer qtd=jdbc.queryForObject("select count(*) from databasechangelog",Integer.class);
-        org.junit.jupiter.api.Assertions.assertEquals(13,qtd);
+        org.junit.jupiter.api.Assertions.assertEquals(14,qtd);
         Integer minimo=jdbc.queryForObject("select capacidade_minima from evento where codigo='LEGADO-001'",Integer.class);
         org.junit.jupiter.api.Assertions.assertEquals(0,minimo);
     }

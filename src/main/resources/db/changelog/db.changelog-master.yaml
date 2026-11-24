@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/changelog/003-organizador-capacidade-minima.yaml
   - include:
       file: db/changelog/004-vagas-disponiveis.yaml
+  - include:
+      file: db/changelog/005-pessoas-inscricoes.yaml
