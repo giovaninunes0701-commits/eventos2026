@@ -1,4 +1,4 @@
-# Eventos 2026 — Aulas 06 e 07
+# Eventos 2026 — Aulas 06 a 09
 
 Aplicação de eventos com Java 21, Spring Boot 4.1.1, JPA, PostgreSQL, Liquibase, API REST, DTOs, serviços, mapeadores e testes MockMvc.
 
@@ -94,3 +94,29 @@ As listagens de eventos agora devolvem `PaginaResponse` (`conteudo`, `pagina`, `
 **Credenciais:** o `.env` não acompanha este pacote. Preserve o `.env` local da sua instalação e nunca o publique no GitHub.
 
 ---
+
+## Aula 08 — CRUD e controle de vagas
+
+- CRUD de eventos e locais.
+- Filtros, ordenação e paginação.
+- Reserva e liberação de vagas.
+- Ativação e inativação de eventos.
+- Validações e tratamento de erros HTTP.
+
+## Aula 09 — Swagger e OpenAPI
+
+- Integração com SpringDoc OpenAPI.
+- Interface Swagger UI.
+- Documentação dos endpoints e respostas HTTP.
+- Organização das rotas por grupos.
+- Configuração para desabilitar o Swagger em produção.
+- Testes automatizados da documentação.
+
+### Acessar a documentação
+
+Com a aplicação em execução:
+
+- Swagger UI: http://localhost:8080/swagger-ui.html
+- OpenAPI JSON: http://localhost:8080/v3/api-docs
+
+A documentação fica habilitada no ambiente de desenvolvimento.
