@@ -3,6 +3,8 @@ package com.curso.eventos.application;
 import com.curso.eventos.domain.*;
 import com.curso.eventos.repository.*;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,15 +14,18 @@ public class InscricaoService {
     private final InscricaoRepository inscricoes;
     private final ParticipanteRepository participantes;
     private final EventoRepository eventos;
+    private final EntityManager entityManager;
 
     public InscricaoService(
             InscricaoRepository inscricoes,
             ParticipanteRepository participantes,
-            EventoRepository eventos) {
+            EventoRepository eventos,
+            EntityManager entityManager) {
 
         this.inscricoes = inscricoes;
         this.participantes = participantes;
         this.eventos = eventos;
+        this.entityManager = entityManager;
     }
 
     @Transactional
@@ -63,6 +68,17 @@ public class InscricaoService {
 
         Inscricao inscricao = buscarPorId(id);
 
+        entityManager.flush();
+        entityManager.refresh(
+            inscricao,
+            LockModeType.PESSIMISTIC_WRITE
+        );
+
+        entityManager.refresh(
+            inscricao.getEvento(),
+            LockModeType.PESSIMISTIC_WRITE
+        );
+
         inscricao.confirmar();
 
         return inscricao;
@@ -72,6 +88,21 @@ public class InscricaoService {
     public Inscricao cancelar(Long id) {
 
         Inscricao inscricao = buscarPorId(id);
+
+        entityManager.flush();
+        entityManager.refresh(
+            inscricao,
+            LockModeType.PESSIMISTIC_WRITE
+        );
+
+        if (inscricao.getStatus() == StatusInscricao.CONFIRMADA) {
+            entityManager.flush();
+
+            entityManager.refresh(
+                inscricao.getEvento(),
+                LockModeType.PESSIMISTIC_WRITE
+            );
+        }
 
         inscricao.cancelar();
 

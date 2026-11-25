@@ -1,6 +1,8 @@
 package com.curso.eventos.application;
 import com.curso.eventos.domain.*;
 import com.curso.eventos.repository.*;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -16,8 +18,9 @@ public class EventoService {
     private final EventoRepository eventos;
     private final LocalEventoRepository locais;
     private final OrganizadorRepository organizadores;
-    public EventoService(EventoRepository eventos, LocalEventoRepository locais, OrganizadorRepository organizadores) {
-        this.eventos = eventos; this.locais = locais; this.organizadores = organizadores;
+    private final EntityManager entityManager;
+    public EventoService(EventoRepository eventos, LocalEventoRepository locais, OrganizadorRepository organizadores, EntityManager entityManager) {
+        this.eventos = eventos; this.locais = locais; this.organizadores = organizadores; this.entityManager = entityManager;
     }
     @Transactional public Evento cadastrar(Evento evento, Long localId, Long organizadorId) {
         if (eventos.existsByCodigo(evento.getCodigo())) throw new RecursoDuplicadoException("Código de evento já cadastrado");
@@ -29,9 +32,16 @@ public class EventoService {
     }
     @Transactional(readOnly = true) public Evento buscarPorId(Long id) { return eventos.findById(id).orElseThrow(() -> new RecursoNaoEncontradoException("Evento não encontrado")); }
     @Transactional(readOnly = true) public List<Evento> listar() { return eventos.findAll(); }
+    private Evento buscarParaAtualizacao(Long id) {
+        Evento evento = buscarPorId(id);
+        entityManager.flush();
+        entityManager.refresh(evento, LockModeType.PESSIMISTIC_WRITE);
+        return evento;
+    }
+
     @Transactional public Evento alterar(Long id, String titulo, LocalDate dataEvento,
             Integer capacidade, Integer capacidadeMinima, Long localId, Long organizadorId) {
-        Evento evento = buscarPorId(id);
+        Evento evento = buscarParaAtualizacao(id);
         LocalEvento local = locais.findById(localId).orElseThrow(() -> new RecursoNaoEncontradoException("Local não encontrado"));
         Organizador organizador = organizadorId == null ? null : organizadores.findById(organizadorId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Organizador não encontrado"));
@@ -40,22 +50,22 @@ public class EventoService {
         return evento;
     }
     @Transactional public Evento alterarStatus(Long id, Status status) {
-        Evento evento = buscarPorId(id);
+        Evento evento = buscarParaAtualizacao(id);
         evento.alterarStatus(status);
         return evento;
     }
     @Transactional public Evento reservarVagas(Long id, int quantidade) {
-        Evento evento = buscarPorId(id);
+        Evento evento = buscarParaAtualizacao(id);
         evento.reservarVagas(quantidade);
         return evento;
     }
     @Transactional public Evento liberarVagas(Long id, int quantidade) {
-        Evento evento = buscarPorId(id);
+        Evento evento = buscarParaAtualizacao(id);
         evento.liberarVagas(quantidade);
         return evento;
     }
     @Transactional public void excluir(Long id) {
-        Evento evento = buscarPorId(id);
+        Evento evento = buscarParaAtualizacao(id);
         eventos.delete(evento);
         eventos.flush();
     }

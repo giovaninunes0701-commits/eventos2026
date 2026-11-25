@@ -120,3 +120,65 @@ Com a aplicação em execução:
 - OpenAPI JSON: http://localhost:8080/v3/api-docs
 
 A documentação fica habilitada no ambiente de desenvolvimento.
+
+## Aula 11 — Concorrência de vagas e locking
+
+A Aula 11 adapta os conceitos de concorrência de estoque do
+material do professor Jefferson Arpasserini para o gerenciamento
+de vagas do Eventos 2026.
+
+### Implementação
+
+- Transações gerenciadas com `@Transactional`.
+- Bloqueio pessimista de escrita com `PESSIMISTIC_WRITE`.
+- Uso do `EntityManager.refresh()` para obter o estado atualizado
+  das entidades sob bloqueio.
+- Proteção de confirmações e cancelamentos de inscrições.
+- Proteção de reservas e liberações manuais de vagas.
+- Coordenação de alterações de capacidade, status e exclusão
+  de eventos.
+- Sincronização de alterações pendentes com `flush()` quando
+  necessário.
+
+### Testes de concorrência com PostgreSQL
+
+Os testes utilizam o banco isolado `eventos2026_test`, com
+perfil `testpg`, sem utilizar os dados do banco de desenvolvimento.
+
+Cenários implementados:
+
+1. Duas inscrições disputando a última vaga.
+2. Duas confirmações da mesma inscrição.
+3. Dois cancelamentos da mesma inscrição.
+4. Reserva manual concorrendo com confirmação de inscrição.
+5. Alteração de capacidade concorrendo com reserva manual.
+
+Executar os testes:
+
+```bash
+./mvnw test -Dtest=InscricaoConcorrenciaTest
+```
+
+Executar a suíte completa:
+
+```bash
+./mvnw clean test
+```
+
+O perfil PostgreSQL exige uma instância local acessível, um banco
+de testes próprio e autenticação configurada para o ambiente.
+A configuração local sem senha não deve ser reproduzida
+automaticamente em produção.
+
+### Limitações e cuidados
+
+- Os testes verificam cenários específicos, não todas as
+  intercalações possíveis entre transações.
+- Bloqueios devem permanecer dentro de transações curtas.
+- O bloqueio pessimista pode produzir espera e deadlocks;
+  operações não devem aplicar tentativas automáticas
+  indiscriminadas.
+- As operações que alteram vagas precisam continuar adotando
+  a mesma política de coordenação.
+- Não houve necessidade de adicionar uma nova migração Liquibase
+  apenas para implementar os bloqueios.
