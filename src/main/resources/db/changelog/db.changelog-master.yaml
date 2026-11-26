@@ -9,3 +9,6 @@ databaseChangeLog:
       file: db/changelog/004-vagas-disponiveis.yaml
   - include:
       file: db/changelog/005-pessoas-inscricoes.yaml
+
+  - include:
+      file: db/changelog/006-contas-acesso.yaml

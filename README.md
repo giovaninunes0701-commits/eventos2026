@@ -182,3 +182,61 @@ automaticamente em produção.
   a mesma política de coordenação.
 - Não houve necessidade de adicionar uma nova migração Liquibase
   apenas para implementar os bloqueios.
+
+## Aula 12 — Autenticacao e Spring Security
+
+A API Eventos 2026 passou a utilizar Spring Security com
+autenticacao HTTP Basic e gerenciamento de contas de acesso.
+
+### Estrutura implementada
+
+- `ContaAcesso`: identidade de acesso vinculada a uma `Pessoa`.
+- `StatusContaAcesso`: ATIVA ou BLOQUEADA.
+- `PerfilAcesso`: OPERADOR ou ADMINISTRADOR.
+- Liquibase 006: tabelas de contas e perfis, chaves estrangeiras,
+  restricoes CHECK, unicidade de login e rollback.
+- BCrypt com `DelegatingPasswordEncoder` e prefixo `{bcrypt}`.
+- `ContaAcessoUserDetailsService`: carrega credenciais e perfis.
+- `SecurityConfig`: autenticacao HTTP Basic e sessao STATELESS.
+- Swagger/OpenAPI com esquema `basicAuth`.
+
+### Endpoints
+
+| Metodo | Endpoint | Acesso |
+| --- | --- | --- |
+| POST | /api/pessoas | Publico provisoriamente |
+| POST | /api/contas-acesso | Publico provisoriamente |
+| GET | /api/contas-acesso/me | Autenticado |
+| PUT | /api/contas-acesso/me/senha | Autenticado |
+
+As demais rotas exigem autenticacao, exceto health e
+documentacao OpenAPI/Swagger.
+
+### Seguranca
+
+- Senhas nunca sao armazenadas em texto puro.
+- O hash da senha nao aparece nos DTOs de resposta.
+- Contas bloqueadas nao podem autenticar.
+- A troca de senha exige a senha atual e invalida a anterior.
+- O perfil inicial de toda conta e OPERADOR.
+- O cliente nao pode escolher ADMINISTRADOR no cadastro.
+- As operacoes de cadastro publico sao apenas para laboratorio.
+- Em producao, HTTP Basic exige HTTPS/TLS.
+- A API ainda nao possui MFA, rate limiting ou auditoria.
+- As permissoes especificas por perfil serao tratadas na Aula 14.
+
+### Testes
+
+Executar todos os testes:
+
+    ./mvnw clean test
+
+Executar apenas os testes de seguranca:
+
+    ./mvnw test -Dtest=ContaAcessoSecurityTest
+
+Resultado validado na Aula 12: 60 testes aprovados,
+sem falhas ou erros.
+
+O banco `eventos2026_test` e utilizado nos testes de
+integracao PostgreSQL, preservando o banco principal.

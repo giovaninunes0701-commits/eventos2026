@@ -4,6 +4,7 @@ import com.curso.eventos.api.dto.*;
 import com.curso.eventos.application.PessoaService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.Valid;
@@ -29,6 +30,7 @@ public class PessoaController {
     }
 
     @Operation(summary = "Cadastrar pessoa")
+    @SecurityRequirements
     @PostMapping
     public ResponseEntity<PessoaResponse> cadastrar(
             @Valid @RequestBody PessoaRequest request) {
