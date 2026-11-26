@@ -19,6 +19,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -79,7 +80,7 @@ class ContaAcessoSecurityTest {
         contas.cadastrar(pessoa.getId(), "login.aula12", "SenhaSegura2026!");
 
         mvc.perform(get("/api/contas-acesso/me")
-                        .with(httpBasic("login.aula12", "SenhaSegura2026!")))
+                        .header("Authorization", "Bearer " + obterToken("login.aula12", "SenhaSegura2026!")))
                 .andExpect(status().isOk())
                 .andExpect(
                         org.springframework.test.web.servlet.result.MockMvcResultMatchers
@@ -103,8 +104,14 @@ class ContaAcessoSecurityTest {
         );
         contas.cadastrar(pessoa.getId(), "senha.aula12", "SenhaSegura2026!");
 
-        mvc.perform(get("/api/contas-acesso/me")
-                        .with(httpBasic("senha.aula12", "SenhaIncorreta2026!")))
+        mvc.perform(post("/api/autenticacao/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "login": "senha.aula12",
+                                  "senha": "SenhaIncorreta2026!"
+                                }
+                                """))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -119,8 +126,14 @@ class ContaAcessoSecurityTest {
         );
         contas.bloquear(conta.getId());
 
-        mvc.perform(get("/api/contas-acesso/me")
-                        .with(httpBasic("bloqueado.aula12", "SenhaSegura2026!")))
+        mvc.perform(post("/api/autenticacao/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "login": "bloqueado.aula12",
+                                  "senha": "SenhaSegura2026!"
+                                }
+                                """))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -134,12 +147,14 @@ class ContaAcessoSecurityTest {
 
         contas.cadastrar(pessoa.getId(), "troca.aula12", "SenhaAntiga2026!");
 
+        String tokenAntigo = obterToken("troca.aula12", "SenhaAntiga2026!");
+
         mvc.perform(get("/api/contas-acesso/me")
-                        .with(httpBasic("troca.aula12", "SenhaAntiga2026!")))
+                        .header("Authorization", "Bearer " + tokenAntigo))
                 .andExpect(status().isOk());
 
         mvc.perform(put("/api/contas-acesso/me/senha")
-                        .with(httpBasic("troca.aula12", "SenhaAntiga2026!"))
+                        .header("Authorization", "Bearer " + tokenAntigo)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -149,23 +164,30 @@ class ContaAcessoSecurityTest {
                                 """))
                 .andExpect(status().isNoContent());
 
-        mvc.perform(get("/api/contas-acesso/me")
-                        .with(httpBasic("troca.aula12", "SenhaAntiga2026!")))
+        mvc.perform(post("/api/autenticacao/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "login": "troca.aula12",
+                                  "senha": "SenhaAntiga2026!"
+                                }
+                                """))
                 .andExpect(status().isUnauthorized());
 
+        String tokenNovo = obterToken("troca.aula12", "SenhaNova2026!");
+
         mvc.perform(get("/api/contas-acesso/me")
-                        .with(httpBasic("troca.aula12", "SenhaNova2026!")))
+                        .header("Authorization", "Bearer " + tokenNovo))
                 .andExpect(status().isOk());
     }
-
 
     @Test
     void contratoOpenApiDocumentaAutenticacao() throws Exception {
         mvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
-                        .jsonPath("$.components.securitySchemes.basicAuth.scheme")
-                        .value("basic"))
+                        .jsonPath("$.components.securitySchemes.bearerAuth.scheme")
+                        .value("bearer"))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
                         .jsonPath("$.paths['/api/contas-acesso'].post.security")
                         .isEmpty())
@@ -173,7 +195,23 @@ class ContaAcessoSecurityTest {
                         .jsonPath("$.paths['/api/pessoas'].post.security")
                         .isEmpty())
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
-                        .jsonPath("$.security[0].basicAuth").exists());
+                        .jsonPath("$.security[0].bearerAuth").exists());
+    }
+
+
+    private String obterToken(String login, String senha) throws Exception {
+        var resposta = mvc.perform(post("/api/autenticacao/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"login":"%s","senha":"%s"}
+                                """.formatted(login, senha)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        return com.jayway.jsonpath.JsonPath.read(
+                resposta.getResponse().getContentAsString(),
+                "$.accessToken"
+        );
     }
 
 }

@@ -1,0 +1,566 @@
+{
+  "info": {
+    "name": "Eventos 2026 - Aula 13 - JWT",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "e7d1629e-0730-4f7c-9387-231386c44e3a"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "localId",
+      "value": ""
+    },
+    {
+      "key": "organizadorId",
+      "value": ""
+    },
+    {
+      "key": "eventoId",
+      "value": ""
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "jwtLogin",
+      "value": ""
+    },
+    {
+      "key": "jwtSenha",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - Health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/health",
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Health 200',()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "00A - Login JWT (salvar token)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login retorna 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "if (pm.response.code === 200) {",
+              "    const body = pm.response.json();",
+              "    pm.collectionVariables.set('accessToken', body.accessToken);",
+              "} else {",
+              "    pm.collectionVariables.unset('accessToken');",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "auth": {
+          "type": "noauth"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"login\": \"{{jwtLogin}}\",\n  \"senha\": \"{{jwtSenha}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/autenticacao/login"
+      }
+    },
+    {
+      "name": "01 - Cadastrar local",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/locais",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nome\":\"Sala A - 2026\",\"endereco\":\"Rua do Centro, 100\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Local criado',()=>pm.response.to.have.status(201));",
+              "if(pm.response.code===201)pm.collectionVariables.set('localId',pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Cadastrar organizador",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/organizadores",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"nome\":\"Equipe de Eventos\",\"email\":\"equipe2026@example.org\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Organizador criado',()=>pm.response.to.have.status(201));",
+              "if(pm.response.code===201)pm.collectionVariables.set('organizadorId',pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Cadastrar evento",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/eventos",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"codigo\":\"AULA07-EVENTO-001\",\"titulo\":\"Feira de projetos\",\"dataEvento\":\"2026-11-20\",\"capacidade\":100,\"capacidadeMinima\":10,\"localId\":{{localId}},\"organizadorId\":{{organizadorId}}}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Evento 201',()=>pm.response.to.have.status(201));",
+              "pm.test('Location presente',()=>pm.response.to.have.header('Location'));",
+              "if(pm.response.code===201)pm.collectionVariables.set('eventoId',pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Consultar evento",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/eventos/{{eventoId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Consulta 200',()=>pm.response.to.have.status(200));",
+              "pm.test('ID esperado',()=>pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get('eventoId'))));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Listar eventos paginados",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/eventos?page=0&size=20&sort=id,asc"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Lista 200',()=>pm.response.to.have.status(200));",
+              "pm.test('Conteúdo é array',()=>pm.expect(pm.response.json().conteudo).to.be.an('array'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Inválido 400",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/eventos",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"codigo\":\"\",\"titulo\":\"\",\"capacidade\":-5,\"capacidadeMinima\":-1,\"localId\":0}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Validação 400',()=>pm.response.to.have.status(400));",
+              "pm.test('Fields presente',()=>pm.expect(pm.response.json().fields).to.have.property('codigo'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Ausente 404",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/eventos/999999999"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Ausente 404',()=>pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Duplicado 409",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/eventos",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"codigo\":\"AULA07-EVENTO-001\",\"titulo\":\"Feira duplicada\",\"dataEvento\":\"2026-11-20\",\"capacidade\":100,\"capacidadeMinima\":10,\"localId\":{{localId}}}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Duplicidade 409',()=>pm.response.to.have.status(409));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 - JSON inválido 400",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/locais",
+        "body": {
+          "mode": "raw",
+          "raw": "{sem-json"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('JSON 400',()=>pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Atualizar evento",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/eventos/{{eventoId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"titulo\":\"Feira de projetos atualizada\",\"dataEvento\":\"2026-11-21\",\"capacidade\":120,\"capacidadeMinima\":10,\"localId\":{{localId}},\"organizadorId\":{{organizadorId}}}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Atualização 200',()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 - Reservar 5 vagas",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/eventos/{{eventoId}}/vagas/reservas",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"quantidade\":5}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Reserva 200',()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 - Liberar 2 vagas",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/eventos/{{eventoId}}/vagas/liberacoes",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"quantidade\":2}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Liberação 200',()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 - Inativar evento",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/eventos/{{eventoId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"status\":\"INATIVO\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Inativação 200',()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 - Reservar em inativo (400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/eventos/{{eventoId}}/vagas/reservas",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"quantidade\":1}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Reserva bloqueada 400',()=>pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "15 - Ativar evento",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/eventos/{{eventoId}}/status",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"status\":\"ATIVO\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Ativação 200',()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "16 - Filtrar eventos",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/eventos?titulo=Feira&status=ATIVO&vagasDisponiveis=true&page=0&size=10&sort=dataEvento,desc"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Filtro 200',()=>pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "17 - Ordenação inválida (400)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/eventos?sort=campoInexistente,asc"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Ordenação 400',()=>pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "18 - Excluir evento",
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/api/eventos/{{eventoId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Exclusão 204',()=>pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "00B - Minha conta JWT",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/contas-acesso/me"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Minha conta retorna 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test('Retorna a conta autenticada', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body.login).to.eql(pm.collectionVariables.get('jwtLogin'));",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  }
+}

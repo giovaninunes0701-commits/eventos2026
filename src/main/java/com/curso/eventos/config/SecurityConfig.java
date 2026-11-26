@@ -30,10 +30,11 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/pessoas",
-                                "/api/contas-acesso"
+                                "/api/contas-acesso",
+                                "/api/autenticacao/login"
                         ).permitAll()
                         .anyRequest().authenticated())
-                .httpBasic(Customizer.withDefaults())
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
                 .build();
     }
 }

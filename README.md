@@ -240,3 +240,93 @@ sem falhas ou erros.
 
 O banco `eventos2026_test` e utilizado nos testes de
 integracao PostgreSQL, preservando o banco principal.
+
+---
+
+## Aula 13 — JWT e Bearer Token
+
+A Aula 13 substitui a autenticacao HTTP Basic da Aula 12 por
+JSON Web Tokens (JWT), utilizando Spring Security OAuth2 Resource Server.
+
+### Implementacao
+
+- Endpoint publico `POST /api/autenticacao/login`.
+- Autenticacao de credenciais pelo `AuthenticationManager`.
+- Assinatura JWT com HS256 e chave de 256 bits.
+- Validade absoluta de 30 minutos.
+- Claims `iss`, `sub`, `iat`, `exp`, `jti` e `perfis`.
+- Validacao de assinatura, emissor e expiracao pelo `JwtDecoder`.
+- Autenticacao de rotas protegidas com `Authorization: Bearer`.
+- Swagger/OpenAPI com esquema `bearerAuth`.
+
+### Configuracao local
+
+Gere uma chave propria:
+
+```bash
+openssl rand -base64 32
+```
+
+Coloque o resultado em `JWT_SECRET` no arquivo `.env` local.
+Nunca publique a chave, o `.env` ou tokens reais no GitHub.
+
+As propriedades da aplicacao definem o emissor
+`https://eventos2026.local` e a expiracao `PT30M`.
+
+Para iniciar:
+
+```bash
+set -a
+source .env
+set +a
+./mvnw spring-boot:run
+```
+
+### Endpoints de autenticacao
+
+| Metodo | Rota | Acesso |
+| --- | --- | --- |
+| POST | `/api/autenticacao/login` | Publico |
+| POST | `/api/pessoas` | Publico para laboratorio |
+| POST | `/api/contas-acesso` | Publico para laboratorio |
+| GET | `/api/contas-acesso/me` | Bearer Token |
+| PUT | `/api/contas-acesso/me/senha` | Bearer Token |
+
+As demais rotas protegidas exigem um JWT valido.
+O HTTP Basic da Aula 12 nao autentica mais essas rotas.
+
+### Postman
+
+Importe `postman/Eventos-2026-Aula-13.postman_collection.json`.
+
+Configure localmente as variaveis `baseUrl`, `jwtLogin` e `jwtSenha`.
+Execute `00A - Login JWT (salvar token)`.
+O script salva automaticamente o `accessToken`, utilizado pelas
+requisicoes protegidas.
+
+Nao publique valores reais das variaveis `jwtSenha` e `accessToken`.
+
+### Testes
+
+```bash
+./mvnw clean test
+```
+
+Resultado validado em 26/11/2026: 63 testes aprovados,
+sem falhas ou erros.
+
+Os testes JWT verificam assinatura valida, claims, expiracao
+e rejeicao de tokens adulterados ou vencidos.
+
+### Limitacoes
+
+- O JWT expira 30 minutos apos a emissao, independentemente do uso.
+- Alterar a senha ou bloquear a conta impede novos logins,
+  mas nao revoga automaticamente tokens ja emitidos.
+- Nao foram implementados refresh token, logout com revogacao
+  ou controle de acesso por perfil.
+- A autorizacao por perfil sera aprofundada na Aula 14.
+- A API didatica ainda nao possui rate limiting no login.
+
+JWT assinado nao e criptografado: o payload pode ser decodificado.
+Nunca inclua senhas, CPF ou outros dados confidenciais nos claims.

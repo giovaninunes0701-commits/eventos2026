@@ -20,9 +20,10 @@ public class OpenApiConfig {
                         .version("1.0.0")
                         .description("API para gerenciamento de eventos, locais, organizadores e controle de vagas."))
                 .components(new Components()
-                        .addSecuritySchemes("basicAuth", new SecurityScheme()
+                        .addSecuritySchemes("bearerAuth", new SecurityScheme()
                                 .type(SecurityScheme.Type.HTTP)
-                                .scheme("basic")))
-                .addSecurityItem(new SecurityRequirement().addList("basicAuth"));
+                                .scheme("bearer")
+                                .bearerFormat("JWT")))
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"));
     }
 }
